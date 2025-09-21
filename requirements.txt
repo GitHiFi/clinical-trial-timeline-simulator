@@ -1,0 +1,9 @@
+flask
+gunicorn  # WSGI server for production
+pandas
+numpy
+plotly
+pyyaml
+scikit-learn
+scipy
+flask-socketio

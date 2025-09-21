@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clinical Trial Timeline Simulator</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            transition: all 0.3s ease;
+            {% if theme == 'dark' %}
+                background-color: #121212;
+                color: #e0e0e0;
+            {% else %}
+                background-color: #f8f9fa;
+                color: #333;
+            {% endif %}
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            {% if theme == 'dark' %} background-color: #1e1e1e; {% else %} background-color: #fff; {% endif %}
+        }
+        .card-title { font-size: 1.5rem; font-weight: 600; }
+        .nav-link { color: inherit; transition: color 0.3s; }
+        .nav-link:hover { color: #007bff; }
+        .btn-primary { background-color: #007bff; border-color: #007bff; }
+        .btn-primary:hover { background-color: #0056b3; border-color: #0056b3; }
+        .form-control { border-radius: 5px; }
+        .alert { border-radius: 5px; }
+        .download-link { margin-top: 10px; }
+        .simulator-select { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg {% if theme == 'dark' %} navbar-dark bg-dark {% else %} navbar-light bg-light {% endif %}">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Clinical Trial Simulator</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="?theme=light">Light Mode</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="?theme=dark">Dark Mode</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="card {% if theme == 'dark' %} bg-dark text-white {% else %} bg-white text-dark {% endif %}">
+            <div class="card-body">
+                <h1 class="card-title">Upload CSV for Simulation</h1>
+                <div class="simulator-select">
+                    <select class="form-select" name="simulator" onchange="this.form.submit()">
+                        <option value="default" {% if request.args.get('simulator') != 'historical' and request.args.get('simulator') != 'ml' %}selected{% endif %}>Default</option>
+                        <option value="historical" {% if request.args.get('simulator') == 'historical' %}selected{% endif %}>Historical</option>
+                        <option value="ml" {% if request.args.get('simulator') == 'ml' %}selected{% endif %}>Machine Learning</option>
+                    </select>
+                </div>
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <input type="file" class="form-control" name="file" accept=".csv">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Simulate & Visualize</button>
+                </form>
+                {% if error %}
+                    <div class="alert alert-danger mt-3">{{ error }}</div>
+                {% endif %}
+                {% if plot %}
+                    <div class="download-link">
+                        <a href="{{ url_for('static', filename='timeline_report.pdf') }}" class="btn btn-success">Download PDF</a>
+                        <a href="{{ url_for('static', filename='timeline_data.csv') }}" class="btn btn-success">Download CSV</a>
+                    </div>
+                    <div id="collaborators">Users: 0</div>
+                {% endif %}
+            </div>
+        </div>
+        {% if plot %}
+            <div class="card {% if theme == 'dark' %} bg-dark text-white {% else %} bg-white text-dark {% endif %}">
+                <div class="card-body">
+                    <h2 class="card-title">Interactive Gantt Chart</h2>
+                    {{ plot | safe }}
+                </div>
+            </div>
+        {% endif %}
+        {% if gcp_flags %}
+            <div class="card {% if theme == 'dark' %} bg-dark text-white {% else %} bg-white text-dark {% endif %}">
+                <div class="card-body">
+                    <h2 class="card-title">GCP Compliance Flags</h2>
+                    <pre class="text-break">{{ gcp_flags }}</pre>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        var socket = io();
+        socket.on('update_chart', function(data) {
+            document.querySelector('div.card-body').innerHTML = data.plot;
+        });
+        socket.on('user_count', function(count) {
+            document.getElementById('collaborators').innerText = `Users: ${count}`;
+        });
+    </script>
+</html>

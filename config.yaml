@@ -1,0 +1,20 @@
+delays:
+  Protocol Design: {mean: 10, std: 5}
+  Recruitment: {mean: 15, std: 10}
+  Treatment: {mean: 20, std: 15}
+  Follow-Up: {mean: 10, std: 8}
+  Analysis: {mean: 5, std: 5}
+gcp:
+  total_cap_days: 540
+  phase_ii_cap_days: 540
+  phase_ii_phases: ['Recruitment', 'Treatment', 'Follow-Up']
+visualization:
+  theme: light  # or 'dark'
+  colors:
+    Protocol Design: '#4C78A8'
+    Recruitment: '#FF6F61'
+    Treatment: '#6BAED6'
+    Follow-Up: '#98D8C6'
+    Analysis: '#D9A6B9'
+flask:
+  debug: true
